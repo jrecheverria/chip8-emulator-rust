@@ -1,16 +1,16 @@
-use macroquad::prelude::*;
+use std::thread::current;
 
 use macroquad::prelude::*;
 
 #[macroquad::main("MyGame")]
 async fn main() {
     // On Chip-8 memory, 000 - 1FF (000 to 512) is meant for the interpreter which we leave as empty for now.
-    // Each address is actually only 12 bits, but we'll allow 16 bits.
-    // The program counter can only address 16 bits at a time.
-    let mut memory: [u16; 256] = [0; 256]; // Initialize the array with zeros
+    // Each address is actually only 8 bits
+    // The program counter can address 16 bits at a time (so 2 memory locations at a time)
+    let mut memory: [u8; 4096] = [0; 4096]; // Initialize the array with zeros
 
     // Font Data
-    let sprite_data: [u16; 80] = [
+    let sprite_data: [u8; 80] = [
         0xF0, 0x90, 0x90, 0x90, 0xF0,     // 0
         0x20, 0x60, 0x20, 0x20, 0x70,     // 1
         0xF0, 0x10, 0xF0, 0x80, 0xF0,     // 2
@@ -31,16 +31,19 @@ async fn main() {
     // Store that data in memory
     memory[0..80].copy_from_slice(&sprite_data);
 
-    let mut stack: [u16; 16] = [0; 16];
-
-
-    let mut program_counter: u16 = 0;   // Program counter keeps track of current address for instruction fetched
+    let mut current_mem_addr = 512;
     let mut index_register: u16 = 0;    // Index register is used to point at different memory locations
+    let mut stack: [u16; 2] = [0; 2];
 
     loop {
+        //Fetch instruction
+        let mut program_counter = fetch_instruction(memory, current_mem_addr);
+        
+        
+        
         clear_background(BLACK);
+        
         next_frame().await;
-
         let maximum_frame_time = 1. / 60.; // Maximum number of seconds per frame to abide the hardware limit of 60 fps (0.166 seconds per frame)
         let frame_time = get_frame_time(); // How many seconds since last frame drawn
 
@@ -50,8 +53,27 @@ async fn main() {
             std::thread::sleep(std::time::Duration::from_millis(delay_frame_time as u64))
         }
 
+        // current_program_memory_addr = current_program_memory_addr + 2;
     }
-
-
 }
+
+fn fetch_instruction(memory: &[u8; 4096], current_mem_addr: usize) -> u16 {
+    let current_instruction = (memory[current_mem_addr] as u16) << 8 | (memory[current_mem_addr + 1]) as u16;
+    return current_instruction;
+}
+
+fn decode_instruction() {}
+
+fn clear_screen() {}
+
+fn jump_instruction() {}
+
+fn set_register() {}
+
+fn add_to_register() {}
+
+fn set_index_register() {}
+
+fn draw_to_screen() {}
+
 
