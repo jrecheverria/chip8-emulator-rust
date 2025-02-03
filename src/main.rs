@@ -9,6 +9,9 @@ async fn main() {
     // The program counter can address 16 bits at a time (so 2 memory locations at a time)
     let mut memory: [u8; 4096] = [0; 4096]; // Initialize the array with zeros
 
+    // 16 one by general registers
+    let mut registers: [[u8; 1]; 16] = [[0; 1]; 16];
+
     // Font Data
     let sprite_data: [u8; 80] = [
         0xF0, 0x90, 0x90, 0x90, 0xF0,     // 0
@@ -28,7 +31,7 @@ async fn main() {
         0xF0, 0x80, 0xF0, 0x80, 0xF0,     // E
         0xF0, 0x80, 0xF0, 0x80, 0x80      // F
     ];
-    // Store that data in memory
+    // Store font data in memory
     memory[0..80].copy_from_slice(&sprite_data);
 
     let mut current_mem_addr = 512;
@@ -53,16 +56,28 @@ async fn main() {
             std::thread::sleep(std::time::Duration::from_millis(delay_frame_time as u64))
         }
 
-        // current_program_memory_addr = current_program_memory_addr + 2;
+        current_mem_addr = current_mem_addr + 2;
     }
 }
 
+// Fetching as instruction in Chip-8 translates fetching two conssecutive bytes and concatenating them into one 16-bit instruction
 fn fetch_instruction(memory: &[u8; 4096], current_mem_addr: usize) -> u16 {
     let current_instruction = (memory[current_mem_addr] as u16) << 8 | (memory[current_mem_addr + 1]) as u16;
     return current_instruction;
 }
 
-fn decode_instruction() {}
+fn decode_instruction(current_instruction: u16) {
+    let first_nibble: u8 = (current_instruction >> 8) as u8 & (1 as u8);
+    match first_nibble {
+        0 => clear_screen(),
+        1 => jump_instruction(),
+        6 => set_register(),
+        7 => add_to_register(),
+        11 => set_index_register(),
+        13 => draw_to_screen(),
+        _ => error!("Unknown instruction found!")
+    }
+}
 
 fn clear_screen() {}
 
